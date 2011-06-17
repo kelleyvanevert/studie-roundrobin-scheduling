@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title></title>
+    <title>Round Robin Scheduling</title>
 	<link type="text/css" href="css/ui-lightness/jquery-ui-1.8.13.custom.css" rel="stylesheet" />	
 	<link type="text/css" href="style.css" rel="stylesheet" />	
 	<script type="text/javascript" src="js/jquery-1.5.1.min.js"></script>
@@ -11,8 +11,16 @@
 </head>
 <body>
 
-<div class="settings"></div>
-<div class="processes"></div>
+<div class="settings">
+    <div class="label quantum">Quantum:</div>
+    <div class="bar quantum-bar"></div>
+    <div class="label switchtime">Context switch time:</div>
+    <div class="bar switchtime-bar"></div>
+</div>
+<div class="hscroll">
+    <div class="processes"></div>
+    <div class="timeline"></div>
+</div>
 
 </body>
 </html>

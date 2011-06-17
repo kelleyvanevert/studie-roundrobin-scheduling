@@ -120,6 +120,8 @@ var analyse = function(quantum, processes, switchtime) {
     log.i("Quantum time        : "+quantum);
     log.i("Context switch time : "+switchtime);
     
+    var switches = [];
+    var runs = [];
     var e;
     var stop = -1; // When the current running process will stop
     while (e = timeline.next()) {
@@ -132,6 +134,10 @@ var analyse = function(quantum, processes, switchtime) {
             var process = queue.peek();
             if (e.pid && e.pid != process.id) {
                 log.t(e.time, "context switch");
+                switches.push({
+                    start: e.time,
+                    duration: switchtime,
+                });
                 timeline.add({
                     time: e.time + switchtime,
                     run: process,
@@ -139,6 +145,11 @@ var analyse = function(quantum, processes, switchtime) {
             } else {
                 queue.next();
                 var d = Math.min(process.remaining, quantum);
+                runs.push({
+                    start: e.time,
+                    duration: d,
+                    pid: process.id,
+                });
                 stop = e.time + d;
                 timeline.add({
                     time: stop,
@@ -149,11 +160,11 @@ var analyse = function(quantum, processes, switchtime) {
             }
         }
     }
-    console.log("\nDONE");
-    console.log("queue.empty? "+(queue.empty() ? "YES" : "NO"));
     
     return {
-        
+        processes: processes,
+        switches: switches,
+        runs: runs,
     };
 };
 
