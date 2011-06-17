@@ -1,6 +1,6 @@
 
 /*
-    - Times and durations in nanoseconds
+    - Times and durations must be in the same units
     
     Usage:
     var stats = analyse(100*1000, [
@@ -12,6 +12,7 @@
 
 var analyse = function(quantum, processes, switchtime) {
     
+    // Niceties for the human eye, and testing..
     var abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     var labels = (function() {
         labels = abc.split("");
@@ -22,8 +23,31 @@ var analyse = function(quantum, processes, switchtime) {
         }
         return labels;
     })();
+    var seconds = function(time) {
+        return time / 1000000;
+    };
     var log = [];
+    var formatTime = function(time) {
+        var str = seconds(time).toFixed(6);
+        return new Array(11 - str.length).join(" ") + str;
+    };
+    // Log, with a time
+    log.t = function(time, str) {
+        this.push(formatTime(time) + ": " + str);
+        console.log(this[this.length - 1]);
+    };
+    // Simply log
+    log.i = function(str) {
+        this.push(str);
+        console.log(this[this.length - 1]);
+    };
     
+    // What we'll be doing is repeatedly jumping to the next event on
+    //  the timeline and handling it..
+    // Events: arrivals and running time completions
+    // Whenever a new process is scheduled, a completion event gets added
+    //  to the timeline, so that the main loop will get a chance to
+    //  start running new programs / ..
     var timeline = {
         events: [], // Sorted by .time, asc
         current: -1,
@@ -39,6 +63,8 @@ var analyse = function(quantum, processes, switchtime) {
         },
     };
     
+    // Make the [[1,2],[3,4]] data of processes into an array
+    //  of process objects; here we'll be storing most of our information
     processes = processes.sort(function(pa, pb) {
         var a = pa[0], b = pb[0];
         if (a == b) return 0;
@@ -54,10 +80,7 @@ var analyse = function(quantum, processes, switchtime) {
         };
     });
     
-    log.push("Processes: "+processes.map(function(process) {
-        return process.label + "("+process.arrival+","+process.duration+")";
-    }).join(", "));
-    
+    // Add all process arrival events to the timeline
     processes.map(function(process) {
         timeline.add({
             arrival: true,
@@ -66,18 +89,27 @@ var analyse = function(quantum, processes, switchtime) {
         });
     });
     
+    // The queue. At each moment in time, the loop has a process queue,
+    //  but of course we now already know which processes will be in the
+    //  queue, and we know in what order they will appear, so it would
+    //  be overkill to simulate all that: we'll just use our array
+    //  of processes.
     var queue = {
-        processes: processes,
-        num: 0, // "num n" means that we have {num} processes, that is, 0..(n+1), in the queue
+        // We'll keep track of which processes have already arrived,
+        //  and should be said to be "in queue"
+        num: 0,
         arrival: function() {
             this.num++;
         },
-        current: -1, // Who's turn is it to run?
+        
+        // To keep track of who's turn it is, we'll just increment-modulo
+        //  the array index of the current process
+        current: -1,
         next: function() {
             var process;
             while (true) {
                 this.current = (this.current + 1) % this.num;
-                process = this.processes[this.current];
+                process = processes[this.current];
                 if (process.remaining > 0) {
                     return process;
                 }
@@ -86,7 +118,7 @@ var analyse = function(quantum, processes, switchtime) {
         },
         empty: function() {
             for (var i = 0; i < this.num; i++) {
-                if (this.processes[i].remaining > 0) {
+                if (processes[i].remaining > 0) {
                     return false;
                 }
             }
@@ -94,57 +126,60 @@ var analyse = function(quantum, processes, switchtime) {
         },
     };
     
+    log.i("Quantum time        : "+quantum);
+    log.i("Context switch time : "+switchtime);
+    
     var e;
     var stop = -1; // When the current running process will stop
     while (e = timeline.next()) {
-        console.log(e.time+":");
-        // Enqueue arriving processes
         if (e.arrival) {
-            console.log(" - arrival of "+e.process.label);
+            log.t(e.time, "arrival of "+e.process.label);
             queue.arrival();
         }
         
-        // If we're (no longer) running any process..
-        if (e.time >= stop) {
-            console.log(" ..not running");
-            // ..try to schedule next process
-            if (!queue.empty()) {
-                console.log(" ..queue not empty");
-                var process = queue.next();
-                console.log("   --> so we're going to schedule #"+process.label+", remaining: "+process.remaining);
-                if (process.remaining <= quantum) {
-                    stop = e.time + process.remaining;
-                    console.log("   ..lower than quantum, next stop: "+stop);
-                    timeline.add({
-                        time: stop,
-                    });
-                    process.remaining = 0;
-                    // ..
-                } else {
-                    stop = e.time + quantum;
-                    console.log("   ..longer, next stop: "+stop+", adding timeline stop and process to queue..");
-                    // ..
-                    timeline.add({
-                        time: stop,
-                    });
-                    process.remaining -= quantum;
-                }
-            }
+        if (e.time >= stop && !queue.empty()) {
+            var process = queue.next();
+            var d = Math.min(process.remaining, quantum);
+            stop = e.time + d;
+            timeline.add({
+                time: stop,
+            });
+            process.remaining -= d;
+            log.t(e.time, "scheduling "+process.label+" ["+seconds(e.time)+" .. "+seconds(stop)+"]");
         }
     }
     console.log("\nDONE");
     console.log("queue.empty? "+(queue.empty() ? "YES" : "NO"));
-    console.log("Log:\n"+log.join("\n"));
     
     return {
         
     };
 };
 
-analyse(3, [
-    [0, 5],
-    [2, 2],
-    [2, 2],
-    [3, 6],
-], 1);
+analyse(100000, [
+    [ 30,   783560],
+    [ 54, 17282004],
+    [ 97, 32814522],
+    [133, 39986730],
+    [163, 42805902],
+    [181, 28249353],
+    [204, 45561030],
+    [249, 26369485],
+    [287, 48582049],
+    [325, 37274777],
+    [365, 37144992],
+    [399, 22059136],
+    [424, 47168534],
+    [455, 20090157],
+    [488, 56053016],
+    [531, 39640908],
+    [572,   717403],
+    [610, 34732701],
+    [637, 21593761],
+    [658, 48477451],
+    [685, 21472914],
+    [729, 44603773],
+].map(function(v) {
+    return [v[0]*1000000, v[1]];
+}), 50000);
 
