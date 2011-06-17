@@ -13,17 +13,10 @@ var analyse = function(quantum, processes, switchtime) {
         }
         return labels;
     })();
-    var seconds = function(time) {
-        return time / 1000000;
-    };
     var log = [];
-    var formatTime = function(time) {
-        var str = seconds(time).toFixed(6);
-        return new Array(11 - str.length).join(" ") + str;
-    };
     // Log, with a time
     log.t = function(time, str) {
-        this.push(formatTime(time) + ": " + str);
+        this.push(time + ": " + str);
         console.log(this[this.length - 1]);
     };
     // Simply log
@@ -152,7 +145,7 @@ var analyse = function(quantum, processes, switchtime) {
                     pid: process.id,
                 });
                 process.remaining -= d;
-                log.t(e.time, "scheduling "+process.label+" ["+seconds(e.time)+" .. "+seconds(stop)+"]");
+                log.t(e.time, "scheduling "+process.label+" ["+e.time+" .. "+stop+"]");
             }
         }
     }
@@ -164,6 +157,7 @@ var analyse = function(quantum, processes, switchtime) {
     };
 };
 
+/*
 analyse(100000, [
     [ 30,   783560],
     [ 54, 17282004],
@@ -190,4 +184,5 @@ analyse(100000, [
 ].map(function(v) {
     return [v[0]*1000000, v[1]];
 }), 50000);
+*/
 

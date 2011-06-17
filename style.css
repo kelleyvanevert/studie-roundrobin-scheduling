@@ -1,0 +1,86 @@
+
+body {
+    margin:0;
+    padding:0;
+    
+    font-family:Georgia, "Times new Roman", serif;
+}
+
+.bar {
+    position:relative;
+}
+.bar .ui-resizable-handle {
+    position:absolute;
+    right:0;
+    width:10px;
+    background:#fff;
+    filter:alpha(opacity=20);
+    -moz-opacity:0.2;
+    -khtml-opacity:0.2;
+    opacity:0.2;
+}
+
+.settings {
+    padding:0 0 0 100px;
+    height:20px;
+    background:#ddd;
+}
+.quantum, .switchtime {
+    line-height:20px;
+    font-size:17px;
+    color:#444;
+}
+.quantum {
+    float:left;
+    text-indent:-80px;
+    background:#333;
+    height:20px;
+    width:150px;
+}
+.switchtime {
+    margin-left:150px;
+    text-indent:-90px;
+    float:left;
+    background:#333;
+    height:20px;
+    width:50px;
+}
+
+.processes {
+    margin:10px 10px 10px 40px;
+    position:relative;
+}
+.processline {
+    position:absolute;
+    top:40px;
+    left:0;
+    right:0;
+}
+.processline.no-0 {
+    top:0;
+}
+.process {
+    position:relative;
+    height:35px;
+    width:200px;
+}
+.process.no-0 { background:#e79428; }
+.process.no-1 { background:#359329; }
+.process.no-2 { background:#a02696; }
+.process.no-3 { background:#1b419f; }
+.process.no-4 { background:#1cb4cf; }
+.process.no-5 { background:#cf1cc0; }
+.process.no-6 { background:#cf1c00; }
+.process.no-7 { background:#d9c200; }
+.process.no-8 { background:#313131; }
+.process.no-9 { background:#0aac76; }
+.num {
+    float:left;
+    position:relative;
+    left:-30px;
+    margin:5px 0 0 0;
+    font-size:20px;
+    height:25px;
+    line-height:25px;
+}
+
