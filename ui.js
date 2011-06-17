@@ -26,21 +26,17 @@ app.init = function() {
     this.processes.init();
 };
 app.processes.init = function() {
-    var mline = function(depth, appends) {
-        var line = $("<div>").addClass("processline no-"+depth);
-        if (depth > 0) {
-            line.append(mline(depth - 1, appends));
-        } else {
-            appends.map(function(e) {
-                line.append(e);
-            });
-        }
+    var mline = function(appends) {
+        var line = $("<div>").addClass("line");
+        appends.map(function(e) {
+            line.append(e);
+        });
         return line;
     };
     for (var i = 0; i < 10; i++) {
         var process = $("<div>").addClass("bar process no-" + i);
         var num = $("<div>").addClass("num").text("P" + i);
-        var line = mline(i, [num, process]).hide().appendTo(".processes");
+        var line = mline([num, process]).hide().appendTo(".processes");
         process.data("line", line);
         process.resizable({
             handles: "e",

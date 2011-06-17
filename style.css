@@ -48,19 +48,12 @@ body {
 
 .processes {
     margin:10px 10px 10px 40px;
-    position:relative;
 }
-.processline {
-    position:absolute;
-    top:40px;
-    left:0;
-    right:0;
-}
-.processline.no-0 {
-    top:0;
+.line {
+    margin-bottom:5px;
+    height:35px;
 }
 .process {
-    position:relative;
     height:35px;
     width:200px;
 }
