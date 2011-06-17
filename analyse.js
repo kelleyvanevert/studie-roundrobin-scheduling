@@ -1,15 +1,5 @@
 
-/*
-    - Times and durations must be in the same units
-    
-    Usage:
-    var stats = analyse(100*1000, [
-      // arrival, duration
-        [3*1000000, 45*1000],
-      // ...
-    ], 50*1000);
-*/
-
+// Times and durations must be in the same units
 var analyse = function(quantum, processes, switchtime) {
     
     // Niceties for the human eye, and testing..
@@ -107,14 +97,22 @@ var analyse = function(quantum, processes, switchtime) {
         current: -1,
         next: function() {
             var process;
+            var rotate = (arguments[0] === false) ? false : true;
+            var cur = this.current;
             while (true) {
-                this.current = (this.current + 1) % this.num;
-                process = processes[this.current];
+                cur = (cur + 1) % this.num;
+                process = processes[cur];
                 if (process.remaining > 0) {
+                    if (rotate) {
+                        this.current = cur;
+                    }
                     return process;
                 }
             }
             return process;
+        },
+        peek: function() {
+            return this.next(false);
         },
         empty: function() {
             for (var i = 0; i < this.num; i++) {
@@ -138,14 +136,24 @@ var analyse = function(quantum, processes, switchtime) {
         }
         
         if (e.time >= stop && !queue.empty()) {
-            var process = queue.next();
-            var d = Math.min(process.remaining, quantum);
-            stop = e.time + d;
-            timeline.add({
-                time: stop,
-            });
-            process.remaining -= d;
-            log.t(e.time, "scheduling "+process.label+" ["+seconds(e.time)+" .. "+seconds(stop)+"]");
+            var process = queue.peek();
+            if (e.pid && e.pid != process.id) {
+                log.t(e.time, "context switch");
+                timeline.add({
+                    time: e.time + switchtime,
+                    run: process,
+                });
+            } else {
+                queue.next();
+                var d = Math.min(process.remaining, quantum);
+                stop = e.time + d;
+                timeline.add({
+                    time: stop,
+                    pid: process.id,
+                });
+                process.remaining -= d;
+                log.t(e.time, "scheduling "+process.label+" ["+seconds(e.time)+" .. "+seconds(stop)+"]");
+            }
         }
     }
     console.log("\nDONE");
