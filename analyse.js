@@ -3,8 +3,8 @@
 var analyse = function(quantum, processes, switchtime) {
     
     // Niceties for the human eye, and testing..
-    var abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     var labels = (function() {
+        var abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         labels = abc.split("");
         for (var x = 0; x < 26; x++) {
             for (var y = 0; y < 26; y++) {
