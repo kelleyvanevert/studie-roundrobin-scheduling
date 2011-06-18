@@ -14,6 +14,7 @@ app.init = function() {
         minWidth: 50,
         maxWidth: 300,
         grid: [10, 10],
+        alsoResize: ".quantum-bar-container",
     });
     
     $(".switchtime-bar").resizable({
@@ -23,6 +24,7 @@ app.init = function() {
         minWidth: 10,
         maxWidth: 100,
         grid: [10, 10],
+        alsoResize: ".switchtime-bar-container",
     });
     
     this.processes.app = this;
@@ -33,18 +35,35 @@ app.init = function() {
     }, function() {
         $(this).removeClass("hover");
     });
-    $(".bar").bind("dragstart", function() {
-        $(this).addClass("active");
+    var self = this;
+    $(".bar").draggable({
+        start: function() {
+            $(this).addClass("active");
+        },
+        stop: function() {
+            $(this).removeClass("active");
+            self.compile();
+        },
     });
-    $(".bar").bind("dragstop", function() {
-        $(this).removeClass("active");
+    $(".bar").resizable({
+        start: function() {
+            $(this).addClass("active");
+        },
+        stop: function() {
+            $(this).removeClass("active");
+            self.compile();
+        },
     });
-    $(".bar").bind("resizestart", function() {
-        $(this).addClass("active");
-    });
-    $(".bar").bind("resizestop", function() {
-        $(this).removeClass("active");
-    });
+    
+    this.compile();
+};
+app.compile = function() {
+    var info = analyse(
+        $(".quantum-bar").width(),
+        this.processes.getTimes(),
+        $(".switchtime-bar").width()
+    );
+    this.display(info);
 };
 app.display = function(info) {
     $(".timeline").html("");
@@ -107,12 +126,14 @@ app.processes.add = function() {
     if (this.num < this.length) {
         this[this.num].data("line").show();
         this.num++;
+        this.app.compile();
     }
 };
 app.processes.drop = function() {
     if (this.num > 3) {
         this.num--;
         this[this.num].data("line").hide();
+        this.app.compile();
     }
 };
 app.processes.getTimes = function() {
@@ -133,12 +154,7 @@ $(function() {
         } else if (e.which == 114) { // r for "reload"
             window.location.reload();
         } else if (e.which == 99 || e.which == 97) { // c for "calculate!", a for "analyse!"
-            var info = analyse(
-                $(".quantum-bar").width(),
-                app.processes.getTimes(),
-                $(".switchtime-bar").width()
-            );
-            app.display(info);
+            app.compile();
         } else {
             console.log(e.which);
         }

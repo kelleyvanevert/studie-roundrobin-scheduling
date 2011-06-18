@@ -27,6 +27,7 @@ body {
     padding:0 0 0 50px;
     height:25px;
     background:transparent url(30p.png) repeat top left;
+    border-bottom:1px solid #aaa;
 }
 .settings .label {
     float:left;
@@ -36,6 +37,12 @@ body {
     font-size:17px;
     color:#000;
     text-shadow:1px 1px 1px #eee;
+}
+.settings .bar-container {
+    float:left;
+    position:relative;
+    top:-1px;
+    border-top:1px solid #ccc;
 }
 .settings .bar {
     float:left;
