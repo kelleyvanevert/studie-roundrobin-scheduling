@@ -1,7 +1,18 @@
 
 // Times and durations must be in the same units
-var analyse = function(quantum, processes, switchtime) {
+var analyse = function(quantum, processes, switchtime, options) {
     
+    // Settings
+    var settings = {
+        always_switch: true,
+    };
+    if (typeof options == "object") {
+        for (key in settings) {
+            if (options[key]) {
+                settings[key] = options[key];
+            }
+        }
+    }
     // Niceties for the human eye, and testing..
     var labels = (function() {
         var abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -39,6 +50,13 @@ var analyse = function(quantum, processes, switchtime) {
             while (at < this.events.length && this.events[at].time < e.time)
                 at++;
             this.events.splice(at, 0, e);
+            this.events.sort(function(a, b) {
+                if (a.time == b.time) {
+                    return a.arrival ? -1 : 1;
+                } else {
+                    return a.time > b.time ? 1 : -1;
+                }
+            });
             return true;
         },
         next: function() {
@@ -144,7 +162,8 @@ var analyse = function(quantum, processes, switchtime) {
                 });
             } else {
                 queue.next();
-                var d = Math.min(process.remaining, quantum);
+                var finishing = process.remaining <= quantum;
+                var d = finishing ? process.remaining : quantum;
                 runs.push({
                     start: e.time,
                     duration: d,
@@ -153,19 +172,56 @@ var analyse = function(quantum, processes, switchtime) {
                 stop = e.time + d;
                 timeline.add({
                     time: stop,
+                    finished: finishing,
                     pid: process.id,
                 });
+                if (finishing) {
+                    process.finished = stop;
+                }
                 process.remaining -= d;
                 log.t(e.time, "scheduling "+process.label+" ["+e.time+" .. "+stop+"]");
             }
         }
     }
     
-    return {
+    var stats = {
+        max: {
+            turn: 0,
+        },
+        total: {
+            turn: 0,
+            norm_turn: 0,
+            resp: 0,
+        },
+        avg: {},
+    };
+    processes.map(function(p)
+    {
+        p.stats = {
+            turn: p.finished - p.arrival,
+            resp: p.finished - p.arrival,
+        };
+        stats.total.turn += p.stats.turn;
+        stats.total.resp += p.stats.resp;
+        
+        stats.max.turn = Math.max(stats.max.turn, p.stats.turn);
+    });
+    processes.map(function(p)
+    {
+        p.stats.norm_turn = p.stats.turn / stats.max.turn;
+        stats.total.norm_turn += p.stats.norm_turn;
+    });
+    for (k in stats.total) {
+        stats.avg[k] = stats.total[k] / processes.length;
+    }
+    
+    return (window.r = {
         processes: processes,
         switches: switches,
         runs: runs,
-    };
+        stats: stats,
+        averages: stats.avg,
+    });
 };
 
 /*
