@@ -5,6 +5,7 @@ var analyse = function(quantum, processes, switchtime, options) {
     // Settings
     var settings = {
         always_switch: true,
+        verbose: false,
     };
     if (typeof options == "object") {
         for (key in settings) {
@@ -27,13 +28,17 @@ var analyse = function(quantum, processes, switchtime, options) {
     var log = [];
     // Log, with a time
     log.t = function(time, str) {
-        this.push(time + ": " + str);
-        console.log(this[this.length - 1]);
+        if (settings.verbose) {
+            this.push(time + ": " + str);
+            console.log(this[this.length - 1]);
+        }
     };
     // Simply log
     log.i = function(str) {
-        this.push(str);
-        console.log(this[this.length - 1]);
+        if (settings.verbose) {
+            this.push(str);
+            console.log(this[this.length - 1]);
+        }
     };
     
     // What we'll be doing is repeatedly jumping to the next event on
@@ -143,6 +148,7 @@ var analyse = function(quantum, processes, switchtime, options) {
     var e;
     var stop = -1; // When the current running process will stop
     while (e = timeline.next()) {
+        console.log("@"+e.time);
         if (e.arrival) {
             log.t(e.time, "arrival of "+e.process.label);
             queue.arrival();
@@ -215,41 +221,18 @@ var analyse = function(quantum, processes, switchtime, options) {
         stats.avg[k] = stats.total[k] / processes.length;
     }
     
-    return (window.r = {
+    return {
+        quantum: quantum,
+        switchtime: switchtime,
         processes: processes,
         switches: switches,
         runs: runs,
         stats: stats,
         averages: stats.avg,
-    });
+    };
 };
 
-/*
-analyse(100000, [
-    [ 30,   783560],
-    [ 54, 17282004],
-    [ 97, 32814522],
-    [133, 39986730],
-    [163, 42805902],
-    [181, 28249353],
-    [204, 45561030],
-    [249, 26369485],
-    [287, 48582049],
-    [325, 37274777],
-    [365, 37144992],
-    [399, 22059136],
-    [424, 47168534],
-    [455, 20090157],
-    [488, 56053016],
-    [531, 39640908],
-    [572,   717403],
-    [610, 34732701],
-    [637, 21593761],
-    [658, 48477451],
-    [685, 21472914],
-    [729, 44603773],
-].map(function(v) {
-    return [v[0]*1000000, v[1]];
-}), 50000);
-*/
+if (typeof exports == "object") {
+    exports.analyse = analyse;
+}
 
